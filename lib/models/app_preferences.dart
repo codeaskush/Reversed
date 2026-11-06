@@ -51,6 +51,7 @@ enum AccentPalette {
 
 /// Visual treatment of the home-screen widget.
 enum WidgetStyle {
+  glass(id: 'glass', label: 'Glass'),
   accent(id: 'accent', label: 'Accent'),
   paper(id: 'paper', label: 'Paper'),
   midnight(id: 'midnight', label: 'Midnight');
@@ -61,10 +62,16 @@ enum WidgetStyle {
   final String label;
 
   static WidgetStyle fromId(String? id) =>
-      values.firstWhere((s) => s.id == id, orElse: () => WidgetStyle.accent);
+      values.firstWhere((s) => s.id == id, orElse: () => WidgetStyle.glass);
+
+  /// Whether the widget sits on a translucent / blurred backdrop. iOS uses a
+  /// system material; Android and the in-app preview use [background] as a
+  /// translucent tint.
+  bool get isTranslucent => this == WidgetStyle.glass;
 
   /// Background colour of the widget for a given accent.
   Color background(AccentPalette accent) => switch (this) {
+    WidgetStyle.glass => const Color(0x59000000),
     WidgetStyle.accent => accent.color,
     WidgetStyle.paper => const Color(0xFFFAF4E6),
     WidgetStyle.midnight => const Color(0xFF14161C),
@@ -72,6 +79,7 @@ enum WidgetStyle {
 
   /// Primary text colour of the widget for a given accent.
   Color foreground(AccentPalette accent) => switch (this) {
+    WidgetStyle.glass => Colors.white,
     WidgetStyle.accent => Colors.white,
     WidgetStyle.paper => const Color(0xFF2B2420),
     WidgetStyle.midnight => const Color(0xFFF2EFE8),
@@ -79,6 +87,7 @@ enum WidgetStyle {
 
   /// Secondary / highlight colour of the widget for a given accent.
   Color highlight(AccentPalette accent) => switch (this) {
+    WidgetStyle.glass => Colors.white.withValues(alpha: 0.85),
     WidgetStyle.accent => Colors.white.withValues(alpha: 0.85),
     WidgetStyle.paper => accent.color,
     WidgetStyle.midnight => accent.color,
@@ -112,7 +121,7 @@ class AppPreferences {
     this.scriptureChoice = ScriptureChoice.random,
     this.themeMode = ThemeMode.system,
     this.accent = AccentPalette.saffron,
-    this.widgetStyle = WidgetStyle.accent,
+    this.widgetStyle = WidgetStyle.glass,
     this.widgetTextSize = WidgetTextSize.medium,
   });
 

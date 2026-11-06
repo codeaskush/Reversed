@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">Reversed</string>
     <string name="widget_name">Verse of the day</string>
+    <string name="widget_label">VERSE OF THE DAY</string>
     <string name="widget_description">A daily verse from the Bhagavad Gita or the Bible.</string>
     <string name="widget_shuffle">Show a different verse</string>
 </resources>

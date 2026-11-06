@@ -32,6 +32,7 @@ abstract final class WidgetKeys {
   static const verseScripture = 'verse_scripture';
   static const verseDate = 'verse_date';
   static const schedule = 'verse_schedule';
+  static const style = 'widget_style';
   static const backgroundColor = 'widget_bg';
   static const foregroundColor = 'widget_fg';
   static const accentColor = 'widget_accent';

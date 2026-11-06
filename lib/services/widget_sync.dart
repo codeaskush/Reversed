@@ -43,6 +43,7 @@ class WidgetSync {
         WidgetKeys.schedule,
         jsonEncode([for (final s in schedule) s.toJson()]),
       ),
+      HomeWidget.saveWidgetData<String>(WidgetKeys.style, style.id),
       HomeWidget.saveWidgetData<String>(
         WidgetKeys.backgroundColor,
         toHex(style.background(accent)),

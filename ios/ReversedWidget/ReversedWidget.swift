@@ -22,6 +22,11 @@ struct WidgetVerse {
   let reference: String
   let text: String
 
+  /// e.g. "Bhagavad Gita 2.47" or "Bible John 3:16".
+  var displayReference: String {
+    [source, reference].filter { !$0.isEmpty }.joined(separator: " ")
+  }
+
   static let placeholder = WidgetVerse(
     source: "Reversed",
     reference: "",
@@ -30,12 +35,18 @@ struct WidgetVerse {
 }
 
 struct WidgetStyle {
+  /// "glass", "accent", "paper" or "midnight" (see WidgetStyle in Dart).
+  let id: String
   let background: Color
   let foreground: Color
   let accent: Color
   let textScale: CGFloat
 
+  /// Glass sits on a system blur material and uses adaptive text colours.
+  var isGlass: Bool { id == "glass" }
+
   static let fallback = WidgetStyle(
+    id: "glass",
     background: Color(red: 0.88, green: 0.48, blue: 0.12),
     foreground: .white,
     accent: .white.opacity(0.85),
@@ -45,6 +56,7 @@ struct WidgetStyle {
   static func load(from defaults: UserDefaults?) -> WidgetStyle {
     guard let defaults else { return .fallback }
     return WidgetStyle(
+      id: defaults.string(forKey: "widget_style") ?? fallback.id,
       background: Color(hex: defaults.string(forKey: "widget_bg")) ?? fallback.background,
       foreground: Color(hex: defaults.string(forKey: "widget_fg")) ?? fallback.foreground,
       accent: Color(hex: defaults.string(forKey: "widget_accent")) ?? fallback.accent,
@@ -152,38 +164,57 @@ struct ReversedWidgetEntryView: View {
   @Environment(\.widgetFamily) var family
   var entry: VerseEntry
 
+  var body: some View {
+    switch family {
+    case .accessoryRectangular:
+      lockScreenRectangular
+    case .accessoryInline:
+      Text("\(entry.verse.displayReference): \(entry.verse.text)")
+    case .accessoryCircular:
+      lockScreenCircular
+    default:
+      homeScreenCard
+    }
+  }
+
+  // MARK: Home screen (small / medium / large)
+
+  private var style: WidgetStyle { entry.style }
+  private var foreground: Color { style.isGlass ? .primary : style.foreground }
+  private var accent: Color { style.isGlass ? .secondary : style.accent }
+
   private var verseFont: Font {
-    let size = (family == .systemSmall ? 13 : 15) * entry.style.textScale
+    let size = (family == .systemSmall ? 13 : 15) * style.textScale
     return .custom("Georgia", size: size)
   }
 
-  var body: some View {
-    VStack(alignment: .leading, spacing: 6) {
-      HStack {
-        Text(entry.verse.source.uppercased())
+  private var homeScreenCard: some View {
+    VStack(alignment: .leading, spacing: 4) {
+      HStack(spacing: 6) {
+        Image(systemName: "sun.max")
+          .font(.system(size: 12, weight: .semibold))
+        Text("VERSE OF THE DAY")
           .font(.system(size: 11, weight: .semibold))
-          .foregroundColor(entry.style.accent)
-          .lineLimit(1)
-        Spacer()
+        Spacer(minLength: 4)
         shuffleButton
       }
+      .foregroundColor(accent)
+      .lineLimit(1)
+
+      Text(entry.verse.displayReference)
+        .font(.system(size: 15 * style.textScale, weight: .semibold))
+        .foregroundColor(foreground)
+        .lineLimit(1)
 
       Text(entry.verse.text)
         .font(verseFont)
-        .foregroundColor(entry.style.foreground)
+        .foregroundColor(foreground)
         .lineSpacing(3)
-        .minimumScaleFactor(0.75)
+        .padding(.top, 4)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-
-      if !entry.verse.reference.isEmpty {
-        Text(entry.verse.reference)
-          .font(.system(size: 12 * entry.style.textScale, weight: .semibold))
-          .foregroundColor(entry.style.accent)
-          .lineLimit(1)
-      }
     }
-    .padding(EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 14))
-    .widgetBackground(entry.style.background)
+    .padding(EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 12))
+    .widgetBackground(style)
   }
 
   @ViewBuilder
@@ -192,14 +223,46 @@ struct ReversedWidgetEntryView: View {
       Button(intent: BackgroundIntent(url: URL(string: "reversed://next"), appGroup: appGroupId)) {
         Image(systemName: "shuffle")
           .font(.system(size: 14, weight: .semibold))
-          .foregroundColor(entry.style.accent)
       }
       .buttonStyle(.plain)
     } else {
       Image(systemName: "shuffle")
         .font(.system(size: 14, weight: .semibold))
-        .foregroundColor(entry.style.accent)
     }
+  }
+
+  // MARK: Lock screen (iOS 16+)
+
+  private var lockScreenRectangular: some View {
+    VStack(alignment: .leading, spacing: 2) {
+      Text(entry.verse.displayReference)
+        .font(.system(size: 12, weight: .semibold))
+        .widgetAccentable()
+        .lineLimit(1)
+      Text(entry.verse.text)
+        .font(.system(size: 12))
+        .lineLimit(3)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .widgetBackground(nil)
+  }
+
+  private var lockScreenCircular: some View {
+    ZStack {
+      if #available(iOSApplicationExtension 16.0, *) {
+        AccessoryWidgetBackground()
+      }
+      VStack(spacing: 0) {
+        Image(systemName: "book.closed")
+          .font(.system(size: 14, weight: .semibold))
+        Text(entry.verse.reference)
+          .font(.system(size: 9, weight: .semibold))
+          .lineLimit(1)
+          .minimumScaleFactor(0.6)
+      }
+      .widgetAccentable()
+    }
+    .widgetBackground(nil)
   }
 }
 
@@ -209,13 +272,21 @@ struct ReversedWidget: Widget {
   // Must match AppConstants.iosWidgetName in lib/core/constants.dart.
   let kind: String = "ReversedWidget"
 
+  private var families: [WidgetFamily] {
+    if #available(iOSApplicationExtension 16.0, *) {
+      return [.systemSmall, .systemMedium, .systemLarge,
+              .accessoryRectangular, .accessoryInline, .accessoryCircular]
+    }
+    return [.systemSmall, .systemMedium, .systemLarge]
+  }
+
   var body: some WidgetConfiguration {
     StaticConfiguration(kind: kind, provider: VerseProvider()) { entry in
       ReversedWidgetEntryView(entry: entry)
     }
     .configurationDisplayName("Verse of the day")
     .description("A daily verse from the Bhagavad Gita or the Bible.")
-    .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+    .supportedFamilies(families)
     .contentMarginsDisabledIfAvailable()
   }
 }
@@ -248,13 +319,27 @@ extension Color {
 }
 
 extension View {
-  /// iOS 17 requires `containerBackground`; earlier versions use a plain background.
+  /// Widget backdrop. Glass uses the system blur material; other styles use
+  /// the colour chosen in the app. `nil` (lock screen) leaves the system
+  /// background alone. iOS 17 requires `containerBackground`.
   @ViewBuilder
-  func widgetBackground(_ color: Color) -> some View {
+  func widgetBackground(_ style: WidgetStyle?) -> some View {
     if #available(iOSApplicationExtension 17.0, *) {
-      containerBackground(for: .widget) { color }
+      if let style, style.isGlass {
+        containerBackground(.ultraThinMaterial, for: .widget)
+      } else if let style {
+        containerBackground(for: .widget) { style.background }
+      } else {
+        containerBackground(for: .widget) { Color.clear }
+      }
     } else {
-      background(color)
+      if let style, style.isGlass {
+        background(.ultraThinMaterial)
+      } else if let style {
+        background(style.background)
+      } else {
+        self
+      }
     }
   }
 }

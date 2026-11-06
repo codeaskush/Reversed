@@ -7,8 +7,9 @@ you, choose a theme, add the widget, done.
 - **Daily verse** – deterministic per day, so the app and both widgets always agree.
 - **Scripture preference** – Gita, Bible, or "surprise me".
 - **Shuffle** – a different verse for today, from the app or straight from the widget.
-- **Theme settings** – light/dark/system, six accent colours, three widget styles
-  (Accent, Paper, Midnight) and three widget text sizes.
+- **Theme settings** – light/dark/system, six accent colours, four widget styles
+  (Glass, Accent, Paper, Midnight) and three widget text sizes.
+- **Lock-screen widgets on iOS** – rectangular, inline and circular families.
 - **Offline** – verses ship inside the app; no network, no accounts, no tracking.
 
 ## Tech stack
@@ -24,7 +25,7 @@ the alternatives considered.
 | State | `flutter_riverpod` 3 |
 | Storage | `shared_preferences` (app) + App Group / `SharedPreferences` (widgets) |
 | App → widget bridge | `home_widget` |
-| iOS widget | WidgetKit + SwiftUI, App Intents for the shuffle button (iOS 17+) |
+| iOS widget | WidgetKit + SwiftUI (home + lock screen), App Intents for the shuffle button (iOS 17+) |
 | Android widget | `AppWidgetProvider` + `RemoteViews` |
 
 ## How the widget stays fresh without opening the app

@@ -24,7 +24,8 @@ to create the target and attach them.
 5. In the target's **Build Settings**, set
    `Info.plist File` = `ReversedWidget/Info.plist` and
    `Code Signing Entitlements` = `ReversedWidget/ReversedWidget.entitlements`.
-   Set the **iOS Deployment Target** to 14.0 or higher (17.0 recommended).
+   Set the **iOS Deployment Target** to **16.0** or higher (17.0 recommended;
+   16.0 is the minimum because of the lock-screen widget families).
 
 ## 2. App Group (shared storage)
 

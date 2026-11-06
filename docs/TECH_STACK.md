@@ -50,13 +50,12 @@ app, Flutter is the shorter path.
 - **Android widget rendering:** classic `RemoteViews` rather than Glance. The
   layout is three text views and an icon; Glance would add a Compose runtime
   dependency for no benefit here.
-- **Minimum OS:** Android 7 (API 24, Flutter default); iOS 14 for the widget,
-  iOS 17 for the shuffle button (it degrades to a static icon below 17).
+- **Minimum OS:** Android 7 (API 24, Flutter default); iOS 16 for the widget
+  extension (home + lock screen), iOS 17 for the shuffle button (it degrades
+  to a static icon below 17).
 
 ## What is intentionally not here (yet)
 
 - Remote verse catalogue / CMS.
 - Notifications ("verse at 7 am").
-- Lock-screen (accessory) widgets on iOS — easy to add as more
-  `supportedFamilies` once the base widget is in place.
 - Original-language text (Sanskrit / Hebrew / Greek) alongside translations.

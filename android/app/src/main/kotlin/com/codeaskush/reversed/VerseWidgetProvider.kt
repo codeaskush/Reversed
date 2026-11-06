@@ -39,17 +39,20 @@ class VerseWidgetProvider : HomeWidgetProvider() {
 
         appWidgetIds.forEach { widgetId ->
             val views = RemoteViews(context.packageName, R.layout.verse_widget).apply {
-                setInt(R.id.widget_background, "setColorFilter", style.background)
-                setTextColor(R.id.widget_source, style.accent)
-                setTextColor(R.id.widget_reference, style.accent)
+                // Colour filter ignores alpha, so translucent styles (Glass) set the
+                // image alpha separately.
+                setInt(R.id.widget_background, "setColorFilter", style.background or 0xFF000000.toInt())
+                setInt(R.id.widget_background, "setImageAlpha", Color.alpha(style.background))
+                setInt(R.id.widget_icon, "setColorFilter", style.accent)
+                setTextColor(R.id.widget_label, style.accent)
+                setTextColor(R.id.widget_reference, style.foreground)
                 setTextColor(R.id.widget_text, style.foreground)
                 setInt(R.id.widget_shuffle, "setColorFilter", style.accent)
 
-                setTextViewText(R.id.widget_source, verse.source.uppercase(Locale.getDefault()))
+                setTextViewText(R.id.widget_reference, verse.displayReference)
                 setTextViewText(R.id.widget_text, verse.text)
-                setTextViewText(R.id.widget_reference, verse.reference)
+                setTextViewTextSize(R.id.widget_reference, TypedValue.COMPLEX_UNIT_SP, 15f * style.textScale)
                 setTextViewTextSize(R.id.widget_text, TypedValue.COMPLEX_UNIT_SP, 15f * style.textScale)
-                setTextViewTextSize(R.id.widget_reference, TypedValue.COMPLEX_UNIT_SP, 12f * style.textScale)
 
                 // Tapping the verse opens the app.
                 setOnClickPendingIntent(
@@ -86,7 +89,11 @@ class VerseWidgetProvider : HomeWidgetProvider() {
 }
 
 /** A verse as stored by the Flutter side. */
-data class WidgetVerse(val source: String, val reference: String, val text: String)
+data class WidgetVerse(val source: String, val reference: String, val text: String) {
+    /** e.g. "Bhagavad Gita 2.47" or "Bible John 3:16". */
+    val displayReference: String
+        get() = listOf(source, reference).filter { it.isNotBlank() }.joinToString(" ")
+}
 
 object VerseStore {
     private const val KEY_TEXT = "verse_text"
